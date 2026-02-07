@@ -6,4 +6,4 @@ Instead of allowing every incoming request to reach the backend blindly, AEGIS a
 
 ## Architecture
 
-![AEGIS Architecture](./diagrams/architecture.png)
+![AEGIS Architecture](./diagrams/Architecture.png)
