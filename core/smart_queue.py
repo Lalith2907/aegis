@@ -32,3 +32,23 @@ class SmartQueue:
         else:
             print(f"[REJECT] Low priority request {request_id} rejected")
             return Decision.REJECT
+
+    def on_worker_complete(self):
+        if self.active_workers == 0:
+            return
+        
+        self.active_workers -= 1
+        print(f"[INFO] Worker completed. Active workers: ", self.active_workers)
+
+        if self.queue:
+            request_id, priority = self.queue.popleft()
+            self.active_workers += 1
+            print(f"[DEQUEUE] Request {request_id} taken from queue and assigned to worker")
+
+    def get_state(self):
+        return {
+            "active_workers": self.active_workers,
+            "queue_depth": len(self.queue),
+            "max_workers": self.max_workers,
+            "max_queue_depth": self.max_queue_size
+        }
