@@ -20,3 +20,7 @@ async def protected_api(priority: str = "LOW"):
         }
     finally:
         sq.on_worker_complete()
+
+@app.get("/metrics")
+def get_metrics():
+    return sq.get_state()
