@@ -1,4 +1,5 @@
 import boto3
+import os
 
 QUEUE_URL = os.getenv("SQS_QUEUE_URL")
 
