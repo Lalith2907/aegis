@@ -1,5 +1,6 @@
 from collections import deque
 from enum import Enum
+from core.sqs_client import send_to_queue
 
 class Decision(Enum):
     ACCEPT = "ACCEPT"
@@ -28,7 +29,7 @@ class SmartQueue:
         
         if len(self.queue) < self.max_queue_size:
             self.queued_requests += 1
-            self.queue.append((request_id, priority))
+            send_to_queue(request_id, priority)
             print(f"[WAIT] Request {request_id} queued")
             return Decision.WAIT
         
