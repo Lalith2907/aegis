@@ -1,12 +1,15 @@
 import boto3
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 QUEUE_URL = os.getenv("SQS_QUEUE_URL")
 
 sqs = boto3.client("sqs", region_name="ap-southeast-2")
 
 def send_to_queue(request_id, priority):
-    response = sqs.send_message (
+    response = sqs.send_message(
         QueueUrl=QUEUE_URL,
         MessageBody=request_id,
         MessageAttributes={
