@@ -13,7 +13,6 @@ class SmartQueue:
         self.max_queue_size = max_queue_size
         self.active_workers = 0
         self.queue = deque()
-
         self.total_requests = 0
         self.accepted_requests = 0
         self.queued_requests = 0
@@ -26,35 +25,33 @@ class SmartQueue:
             self.accepted_requests += 1
             print(f"[ACCEPT] Request {request_id} accepted immediately")
             return Decision.ACCEPT
-        
+
         if len(self.queue) < self.max_queue_size:
             self.queued_requests += 1
+            self.queue.append((request_id, priority))
             send_to_queue(request_id, priority)
-            print(f"[WAIT] Request {request_id} queued")
+            print(f"[WAIT] Request {request_id} queued in SQS")
             return Decision.WAIT
-        
+
         if priority.upper() == "HIGH":
             self.queued_requests += 1
             self.queue.append((request_id, priority))
-            print(f"[WAIT] High priority request {request_id} queued")
+            send_to_queue(request_id, priority)
+            print(f"[WAIT] High priority request {request_id} queued in SQS")
             return Decision.WAIT
         
-        else:
-            self.rejected_requests += 1
-            print(f"[REJECT] Low priority request {request_id} rejected")
-            return Decision.REJECT
+        self.rejected_requests += 1
+        print(f"[REJECT] Low priority request {request_id} rejected")
+        return Decision.REJECT
 
     def on_worker_complete(self):
         if self.active_workers == 0:
             return
-        
         self.active_workers -= 1
-        print(f"[INFO] Worker completed. Active workers: ", self.active_workers)
-
+        print(f"[INFO] Worker completed. Active workers: {self.active_workers}")
         if self.queue:
             request_id, priority = self.queue.popleft()
-            self.active_workers += 1
-            print(f"[DEQUEUE] Request {request_id} taken from queue and assigned to worker")
+            print(f"[DEQUEUE] Request {request_id} removed from local queue tracker")
 
     def get_state(self):
         return {

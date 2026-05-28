@@ -18,7 +18,7 @@ def run_load_test():
     start_time = time.time()
 
     for i in range(TOTAL_REQUESTS):
-        t = threading.Thread(target=hit_request, args={i, })
+        t = threading.Thread(target=hit_request, args=(i, ))
         threads.append(t)
 
     for i in range(0, TOTAL_REQUESTS, CONCURRENCY):
