@@ -21,3 +21,10 @@ def send_to_queue(request_id, priority):
     )
     print(f"[SQS] Request {request_id} sent to SQS")
     return response
+
+def get_queue_depth():
+    response = sqs.get_queue_attributes(
+        QueueUrl=QUEUE_URL,
+        AttributeNames=["ApproximateNumberOfMessages"]
+    )
+    return int(response["Attributes"]["ApproximateNumberOfMessages"])

@@ -1,6 +1,5 @@
-from collections import deque
 from enum import Enum
-from core.sqs_client import send_to_queue
+from core.sqs_client import send_to_queue, get_queue_depth
 
 class Decision(Enum):
     ACCEPT = "ACCEPT"
@@ -12,7 +11,6 @@ class SmartQueue:
         self.max_workers = max_workers
         self.max_queue_size = max_queue_size
         self.active_workers = 0
-        self.queue = deque()
         self.total_requests = 0
         self.accepted_requests = 0
         self.queued_requests = 0
@@ -26,16 +24,19 @@ class SmartQueue:
             print(f"[ACCEPT] Request {request_id} accepted immediately")
             return Decision.ACCEPT
 
-        if len(self.queue) < self.max_queue_size:
+        try:
+            current_queue_depth = get_queue_depth()
+        except Exception as e:
+            print(f"[ERROR] Unable to get queue depth: {e}")
+            return Decision.REJECT
+        if current_queue_depth < self.max_queue_size:
             self.queued_requests += 1
-            self.queue.append((request_id, priority))
             send_to_queue(request_id, priority)
             print(f"[WAIT] Request {request_id} queued in SQS")
             return Decision.WAIT
 
         if priority.upper() == "HIGH":
             self.queued_requests += 1
-            self.queue.append((request_id, priority))
             send_to_queue(request_id, priority)
             print(f"[WAIT] High priority request {request_id} queued in SQS")
             return Decision.WAIT
@@ -49,14 +50,11 @@ class SmartQueue:
             return
         self.active_workers -= 1
         print(f"[INFO] Worker completed. Active workers: {self.active_workers}")
-        if self.queue:
-            request_id, priority = self.queue.popleft()
-            print(f"[DEQUEUE] Request {request_id} removed from local queue tracker")
-
+        
     def get_state(self):
         return {
             "active_workers": self.active_workers,
-            "queue_depth": len(self.queue),
+            "queue_depth": get_queue_depth(),
             "max_workers": self.max_workers,
             "max_queue_depth": self.max_queue_size,
             "total_requests": self.total_requests,
