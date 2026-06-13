@@ -1,5 +1,6 @@
 from enum import Enum
 from core.sqs_client import send_to_queue, get_queue_depth
+from core.cloudwatch_client import publish_metric
 
 class Decision(Enum):
     ACCEPT = "ACCEPT"
@@ -21,6 +22,8 @@ class SmartQueue:
         if self.active_workers < self.max_workers:
             self.active_workers += 1
             self.accepted_requests += 1
+            publish_metric("AcceptedRequests", self.accepted_requests)
+            publish_metric("ActiveWorkers", self.active_workers)
             print(f"[ACCEPT] Request {request_id} accepted immediately")
             return Decision.ACCEPT
 
@@ -31,17 +34,22 @@ class SmartQueue:
             return Decision.REJECT
         if current_queue_depth < self.max_queue_size:
             self.queued_requests += 1
+            publish_metric("QueuedRequests", self.queued_requests)
+            publish_metric("QueueDepth", current_queue_depth + 1)
             send_to_queue(request_id, priority)
             print(f"[WAIT] Request {request_id} queued in SQS")
             return Decision.WAIT
 
         if priority.upper() == "HIGH":
             self.queued_requests += 1
+            publish_metric("QueuedRequests", self.queued_requests)
+            publish_metric("QueueDepth", current_queue_depth + 1)
             send_to_queue(request_id, priority)
             print(f"[WAIT] High priority request {request_id} queued in SQS")
             return Decision.WAIT
         
         self.rejected_requests += 1
+        publish_metric("RejectedRequests", self.rejected_requests)
         print(f"[REJECT] Low priority request {request_id} rejected")
         return Decision.REJECT
 
@@ -49,6 +57,7 @@ class SmartQueue:
         if self.active_workers == 0:
             return
         self.active_workers -= 1
+        publish_metric("ActiveWorkers", self.active_workers)
         print(f"[INFO] Worker completed. Active workers: {self.active_workers}")
         
     def get_state(self):
