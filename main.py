@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from core.smart_queue import SmartQueue, Decision
 import asyncio
+import uuid
 
 app = FastAPI()
 
@@ -8,7 +9,7 @@ sq = SmartQueue(max_workers=2, max_queue_size=3)
 
 @app.get("/api")
 async def protected_api(priority: str = "LOW"):
-    request_id = str(id(asyncio.current_task()))
+    request_id = str(uuid.uuid4())
     decision = sq.admit_request(request_id, priority)
     
     if decision == Decision.REJECT:

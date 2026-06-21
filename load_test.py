@@ -1,15 +1,20 @@
 import requests
 import threading
 import time
+import random
 
-URL = "http://3.107.20.120:8000/api"
-TOTAL_REQUESTS = 15
-CONCURRENCY = 10
+URL = "http://aegis-alb-1122660298.ap-southeast-2.elb.amazonaws.com/api"
+TOTAL_REQUESTS = 50
+CONCURRENCY = 20
 
 def hit_request(i):
+    priority = random.choice(["HIGH", "LOW"])
+
     try:
-        response = requests.get(URL)
-        print(f"Request {i}: {response.status_code}")
+        response = requests.get(
+            f"http://aegis-alb-1122660298.ap-southeast-2.elb.amazonaws.com/api?priority={priority}"
+        )
+        print(f"Request {i} ({priority}): {response.status_code}")
     except Exception as e:
         print(f"Request {i}: ERROR - {e}")
 
