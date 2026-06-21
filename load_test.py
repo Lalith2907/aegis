@@ -2,7 +2,7 @@ import requests
 import threading
 import time
 
-URL = "http://13.211.167.143:8000/api"
+URL = "http://3.107.20.120:8000/api"
 TOTAL_REQUESTS = 15
 CONCURRENCY = 10
 

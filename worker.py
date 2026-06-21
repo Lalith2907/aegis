@@ -2,6 +2,9 @@ import boto3
 import os
 import time
 from dotenv import load_dotenv
+import sys
+
+WORKER_NAME = sys.argv[1] if len(sys.argv) > 1 else "Worker"
 
 load_dotenv()
 
@@ -9,7 +12,7 @@ QUEUE_URL = os.getenv("SQS_QUEUE_URL")
 
 sqs = boto3.client("sqs", region_name="ap-southeast-2")
 
-print("[WORKER] Worker started...")
+print(f"[{WORKER_NAME}] Worker started...")
 
 while True:
     response = sqs.receive_message (
@@ -33,7 +36,7 @@ while True:
             .get("StringValue", "LOW")
         )
 
-        print(f"[WORKER] Processing request {request_id} | Priority: {priority}")
+        print(f"[{WORKER_NAME}] Processing request {request_id} | Priority: {priority}")
 
         time.sleep(5)
 
@@ -42,4 +45,4 @@ while True:
             ReceiptHandle=message["ReceiptHandle"]
         )
 
-        print(f"[WORKER] Completed request {request_id}")
+        print(f"[{WORKER_NAME}] Completed request {request_id}")
